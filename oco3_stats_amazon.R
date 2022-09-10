@@ -9,7 +9,7 @@ time        <- "month"
 variable    <- "Daily_SIF_757nm"
 filters     <- c("LC_PERC_2020")
 threshs     <- c(90)
-direct      <- c("gt", "eq")
+direct      <- c("gt")
 # filters     <- c("LC_PERC_2020", "cloud_flag_abp")
 # threshs     <- c(90, 0)
 # direct      <- c("gt", "eq")
