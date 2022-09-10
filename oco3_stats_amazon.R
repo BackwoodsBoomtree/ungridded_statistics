@@ -169,9 +169,9 @@ get_ts  <- function(df_f, variable, time, filters, threshs, direct) {
         }
       }
       
-      annual_df[nrow(annual_df) + 1,] <- c(mean(ts_data[, 1], rm.na = TRUE),
-                                           sd(ts_data[, 1]), 
-                                           sd(ts_data[, 1]) / (sqrt(length(ts_data[, 1]))),
+      annual_df[nrow(annual_df) + 1,] <- c(mean(ts_data[, 1], na.rm = TRUE),
+                                           sd(ts_data[, 1], na.rm = TRUE), 
+                                           sd(ts_data[, 1], na.rm = TRUE) / (sqrt(length(ts_data[, 1]))),
                                            length(ts_data[, 1]),
                                            basename(df_t[j]))
       
