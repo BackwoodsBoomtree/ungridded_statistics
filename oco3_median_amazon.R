@@ -1,19 +1,22 @@
 library(terra)
 library(ncdf4)
 
+# Compute median of values from a time series:
+# for instance, monthly median values from several years
+
 input_files <- list.files("G:/OCO3/extracted/amazon", full.names = TRUE, recursive = TRUE)
-out_name    <- "Amazon_OCO3_L2B10_2019-2022_sifd_mean_cs"
+out_name    <- "Amazon_OCO3_L2B10_2015-2021_pa_median_cs"
 out_dir     <- "G:/SIF_comps/csv/oco3/"
-years       <- c(2019:2022)
+years       <- c(2015:2021)
 time        <- "month"
-variable    <- "Daily_SIF_757nm"
+variable    <- "PA"
 filters     <- c("LC_PERC_2020", "cloud_flag_abp")
 threshs     <- c(90, 0)
 direct      <- c("gt", "eq")
-annual      <- TRUE # Compresses output to singular annual values; ie monthly means over many years
+annual      <- TRUE
 
 file_df <- function(input_files, year, time) {
-  
+
   if (time == "8-day") {
     dates <- seq(as.Date(paste0(year,"-01-01")), as.Date(paste0((year),"-12-31")), by="days")
     
@@ -113,8 +116,8 @@ file_df <- function(input_files, year, time) {
 }
 get_ts  <- function(df_f, variable, time, filters, threshs, direct) {
   
-  annual_df <- data.frame(matrix(ncol = 5, nrow = 0))
-  colnames(annual_df) <- c("Mean", "SD", "SEM", "n", "filename")
+  annual_df <- data.frame(matrix(ncol = 2, nrow = 0))
+  colnames(annual_df) <- c("Median", "n")
   
   if (time == "8-day") {
     t <- 46
@@ -167,20 +170,15 @@ get_ts  <- function(df_f, variable, time, filters, threshs, direct) {
         }
       }
       
-      annual_df[nrow(annual_df) + 1,] <- c(mean(ts_data[, 1], na.rm = TRUE),
-                                           sd(ts_data[, 1], na.rm = TRUE), 
-                                           sd(ts_data[, 1], na.rm = TRUE) / (sqrt(length(ts_data[, 1]))),
-                                           length(ts_data[, 1]),
-                                           basename(df_t[j]))
+      annual_df[nrow(annual_df) + 1,] <- c(median(ts_data[, 1], na.rm = TRUE), length(ts_data[, 1]))
       
     } else {
-      annual_df[nrow(annual_df) + 1,] <- c(NA, NA, NA, NA, NA)
+      annual_df[nrow(annual_df) + 1,] <- c(NA, NA)
     }
   }
   
   return(annual_df)
 }
-
 
 if (annual == FALSE) {
   # Append values from each year to each other and output
@@ -213,4 +211,6 @@ if (annual == FALSE) {
   write.csv(ts_data, paste0(out_dir, out_name, ".csv"), row.names = FALSE)
   
 }
+
+
 

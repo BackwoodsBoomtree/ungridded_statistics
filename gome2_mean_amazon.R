@@ -2,7 +2,7 @@ library(terra)
 library(ncdf4)
 
 input_files <- list.files("G:/GOME2/extracted/amazon", full.names = TRUE, recursive = TRUE)
-out_name    <- "Amazon_NSIFv2.6.2.GOME-2A_2011-2018_sifd_qc2"
+out_name    <- "Amazon_NSIFv2.6.2.GOME-2A_2011-2018_sifd_mean_qc2"
 out_dir     <- "G:/SIF_comps/csv/gome2/"
 years       <- c(2011:2018)
 time        <- "month"
@@ -14,6 +14,7 @@ filters     <- c("LC_PERC_2020", "Quality_Flag")
 # direct      <- c("gt", "eq")
 threshs     <- c(90, 2)
 direct      <- c("gt", "eq")
+annual      <- TRUE # Compresses output to singular annual values; ie monthly means over many years
 
 file_df <- function(input_files, year, time) {
   
@@ -184,17 +185,36 @@ get_ts  <- function(df_f, variable, time, filters, threshs, direct) {
   return(annual_df)
 }
 
-# Write time series csv for each year
-for (j in 1:length(years)) {
-  
-  files   <- file_df(input_files, years[j], time)
-  ts_data <- get_ts(files, variable, time, filters, threshs, direct)
-  
-  if (j == 1) {
-    ts_out <- ts_data
-  } else {
-    ts_out <- rbind(ts_out, ts_data)
+
+if (annual == FALSE) {
+  # Append values from each year to each other and output
+  for (j in 1:length(years)) {
+    
+    files   <- file_df(input_files, years[j], time)
+    ts_data <- get_ts(files, variable, time, filters, threshs, direct)
+    
+    if (j == 1) {
+      ts_out <- ts_data
+    } else {
+      ts_out <- rbind(ts_out, ts_data)
+    }
   }
+  write.csv(ts_out, paste0(out_dir, out_name, ".csv"), row.names = FALSE)
+  
+} else if (annual == TRUE) {
+  
+  # Combine annual dfs so we can calculate across all
+  for (j in 1:length(years)) {
+    year_files   <- file_df(input_files, years[j], time)
+    if (j == 1) {
+      all_files <- year_files
+    } else {
+      all_files <- rbind(all_files, year_files)
+    }
+  }
+  
+  ts_data <- get_ts(all_files, variable, time, filters, threshs, direct)
+  write.csv(ts_data, paste0(out_dir, out_name, ".csv"), row.names = FALSE)
+  
 }
-write.csv(ts_out, paste0(out_dir, out_name, ".csv"), row.names = FALSE)
 
