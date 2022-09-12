@@ -4,12 +4,12 @@ library(ncdf4)
 # Compute median of values from a time series:
 # for instance, monthly median values from several years
 
-input_files <- list.files("G:/GOME2/extracted/amazon", full.names = TRUE, recursive = TRUE)
-out_name    <- "Amazon_NSIFv2.6.2.GOME-2A_2011-2018_pa_median_qc2"
+input_files <- list.files("G:/GOME2/extracted/amazon", pattern = "*.nc", full.names = TRUE, recursive = TRUE)
+out_name    <- "Amazon_NSIFv2.6.2.GOME-2A_2011-2018_vza_median_qc2"
 out_dir     <- "G:/SIF_comps/csv/gome2/"
 years       <- c(2011:2018)
 time        <- "month"
-variable    <- "PA"
+variable    <- "VZA"
 filters     <- c("LC_PERC_2020", "Quality_Flag")
 # threshs     <- c(90, 0)
 # direct      <- c("gt", "gt")
@@ -146,9 +146,9 @@ get_ts  <- function(df_f, variable, time, filters, threshs, direct) {
         
         # Get filters for this time step
         if (!is.null(filters)) {
-          for (f in 1:length(filters)){
-            data <- cbind(data, f = ncvar_get(nc, filters[f]))
-            colnames(data)[(f + 1)] <- filters[f]
+          for (f in 1:length(unique(filters))) {
+            data <- cbind(data, f = ncvar_get(nc, unique(filters)[f]))
+            colnames(data)[(f + 1)] <- unique(filters)[f]
           }
         }
         
@@ -164,12 +164,21 @@ get_ts  <- function(df_f, variable, time, filters, threshs, direct) {
       # filter the data
       if (!is.null(filters)) {
         for (f in 1:length(filters)){
+          
+          loc <- match(filters[f], names(ts_data)) # locates column of filter
+          
           if (direct[f] == "lt"){
-            ts_data <- ts_data[ts_data[, (f + 1)] <= threshs[f],]
+            ts_data <- ts_data[ts_data[, (loc)] < threshs[f],]
+            message(paste0("Keeping ", filters[f], " values < ", threshs[f]))
           } else if (direct[f] == "gt"){
-            ts_data <- ts_data[ts_data[, (f + 1)] >= threshs[f],]
+            ts_data <- ts_data[ts_data[, (loc)] > threshs[f],]
+            message(paste0("Keeping ", filters[f], " values > ", threshs[f]))
           } else if (direct[f] == "eq"){
-            ts_data <- ts_data[ts_data[, (f + 1)] == threshs[f],]
+            ts_data <- ts_data[ts_data[, (loc)] == threshs[f],]
+            message(paste0("Keeping ", filters[f], " values == ", threshs[f]))
+          } else if (direct[f] == "neq"){
+            ts_data <- ts_data[ts_data[, (loc)] != threshs[f],]
+            message(paste0("Keeping ", filters[f], " values != ", threshs[f]))
           }
         }
       }

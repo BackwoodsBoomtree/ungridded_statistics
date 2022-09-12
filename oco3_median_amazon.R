@@ -1,18 +1,22 @@
 library(terra)
 library(ncdf4)
 
+## OCO Flags ##
+# cloud_flag_abp:  Clouds: 0 - Classified clear, 1 - Classified cloudy, 2 - Not classified, all other values undefined; not used in SIF processing
+# qc: Quality Flag: 0 = best (passes quality control + cloud fraction = 0.0); 1 = good (passes quality control); 2 = bad (failed quality control); -1 = not investigated
+
 # Compute median of values from a time series:
 # for instance, monthly median values from several years
 
-input_files <- list.files("G:/OCO3/extracted/amazon", full.names = TRUE, recursive = TRUE)
-out_name    <- "Amazon_OCO3_L2B10_2015-2021_pa_median_cs"
+input_files <- list.files("G:/OCO3/extracted/amazon", pattern = "*.nc", full.names = TRUE, recursive = TRUE)
+out_name    <- "Amazon_OCO3_L2B10_2019-2022_pa_median_qc_ng"
 out_dir     <- "G:/SIF_comps/csv/oco3/"
-years       <- c(2015:2021)
+years       <- c(2019:2022)
 time        <- "month"
 variable    <- "PA"
-filters     <- c("LC_PERC_2020", "cloud_flag_abp")
-threshs     <- c(90, 0)
-direct      <- c("gt", "eq")
+filters     <- c("LC_PERC_2020", "qc", "qc", "Mode")
+threshs     <- c(90, -1, 2, 2)
+direct      <- c("gt", "gt", "lt", "lt")
 annual      <- TRUE
 
 file_df <- function(input_files, year, time) {
@@ -142,9 +146,9 @@ get_ts  <- function(df_f, variable, time, filters, threshs, direct) {
         
         # Get filters for this time step
         if (!is.null(filters)) {
-          for (f in 1:length(filters)){
-            data <- cbind(data, f = ncvar_get(nc, filters[f]))
-            colnames(data)[(f + 1)] <- filters[f]
+          for (f in 1:length(unique(filters))) {
+            data <- cbind(data, f = ncvar_get(nc, unique(filters)[f]))
+            colnames(data)[(f + 1)] <- unique(filters)[f]
           }
         }
         
@@ -160,12 +164,21 @@ get_ts  <- function(df_f, variable, time, filters, threshs, direct) {
       # filter the data
       if (!is.null(filters)) {
         for (f in 1:length(filters)){
+          
+          loc <- match(filters[f], names(ts_data)) # locates column of filter
+          
           if (direct[f] == "lt"){
-            ts_data <- ts_data[ts_data[, (f + 1)] <= threshs[f],]
+            ts_data <- ts_data[ts_data[, (loc)] < threshs[f],]
+            message(paste0("Keeping ", filters[f], " values < ", threshs[f]))
           } else if (direct[f] == "gt"){
-            ts_data <- ts_data[ts_data[, (f + 1)] >= threshs[f],]
+            ts_data <- ts_data[ts_data[, (loc)] > threshs[f],]
+            message(paste0("Keeping ", filters[f], " values > ", threshs[f]))
           } else if (direct[f] == "eq"){
-            ts_data <- ts_data[ts_data[, (f + 1)] == threshs[f],]
+            ts_data <- ts_data[ts_data[, (loc)] == threshs[f],]
+            message(paste0("Keeping ", filters[f], " values == ", threshs[f]))
+          } else if (direct[f] == "neq"){
+            ts_data <- ts_data[ts_data[, (loc)] != threshs[f],]
+            message(paste0("Keeping ", filters[f], " values != ", threshs[f]))
           }
         }
       }

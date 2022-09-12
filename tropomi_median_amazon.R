@@ -1,20 +1,18 @@
 library(terra)
 library(ncdf4)
 
-## OCO Flags ##
-# cloud_flag_abp:  Clouds: 0 - Classified clear, 1 - Classified cloudy, 2 - Not classified, all other values undefined; not used in SIF processing
-# qc: Quality Flag: 0 = best (passes quality control + cloud fraction = 0.0); 1 = good (passes quality control); 2 = bad (failed quality control); -1 = not investigated
-# Mode: Instrument Measurement Mode, 0=Nadir, 1=Glint, 2=Target, 3=AreaMap, 4=Transition;
+# Compute median of values from a time series:
+# for instance, monthly median values from several years
 
-input_files <- list.files("G:/OCO2/extracted/amazon", pattern = "*.nc", full.names = TRUE, recursive = TRUE)
-out_name    <- "Amazon_OCO2_L2B10_2015-2021_sifd_771_mean_qc_nadir"
-out_dir     <- "G:/SIF_comps/csv/oco2/"
-years       <- c(2015:2021)
+input_files <- list.files("G:/TROPOMI/esa/extracted/ebf/amazon", pattern = "*.nc", full.names = TRUE, recursive = TRUE)
+out_name    <- "Amazon_TROPOSIF_L2B_2019-2021_vza_median"
+out_dir     <- "G:/SIF_comps/csv/tropomi/"
+years       <- c(2019:2021)
 time        <- "month"
-variable    <- "Daily_SIF_771nm"
-filters     <- c("LC_PERC_2020", "qc", "Mode")
-threshs     <- c(90, -1, 2, 0)
-direct      <- c("gt", "gt", "lt", "eq")
+variable    <- "VZA"
+filters     <- c("LC_PERC_2020")
+threshs     <- c(90)
+direct      <- c("gt")
 annual      <- TRUE # Compresses output to singular annual values; ie monthly means over many years
 
 file_df <- function(input_files, year, time) {
@@ -118,8 +116,8 @@ file_df <- function(input_files, year, time) {
 }
 get_ts  <- function(df_f, variable, time, filters, threshs, direct) {
   
-  annual_df <- data.frame(matrix(ncol = 5, nrow = 0))
-  colnames(annual_df) <- c("Mean", "SD", "SEM", "n", "filename")
+  annual_df <- data.frame(matrix(ncol = 2, nrow = 0))
+  colnames(annual_df) <- c("Median", "n")
   
   if (time == "8-day") {
     t <- 46
@@ -181,14 +179,10 @@ get_ts  <- function(df_f, variable, time, filters, threshs, direct) {
         }
       }
       
-      annual_df[nrow(annual_df) + 1,] <- c(mean(ts_data[, 1], na.rm = TRUE),
-                                           sd(ts_data[, 1], na.rm = TRUE), 
-                                           sd(ts_data[, 1], na.rm = TRUE) / (sqrt(length(ts_data[, 1]))),
-                                           length(ts_data[, 1]),
-                                           basename(df_t[j]))
+      annual_df[nrow(annual_df) + 1,] <- c(median(ts_data[, 1], na.rm = TRUE), length(ts_data[, 1]))
       
     } else {
-      annual_df[nrow(annual_df) + 1,] <- c(NA, NA, NA, NA, NA)
+      annual_df[nrow(annual_df) + 1,] <- c(NA, NA)
     }
   }
   
@@ -226,4 +220,6 @@ if (annual == FALSE) {
   write.csv(ts_data, paste0(out_dir, out_name, ".csv"), row.names = FALSE)
   
 }
+
+
 
