@@ -2,14 +2,14 @@ library(terra)
 library(ncdf4)
 
 input_files <- list.files("G:/TROPOMI/esa/extracted/ebf/amazon", pattern = "*.nc", full.names = TRUE, recursive = TRUE)
-out_name    <- "Amazon_TROPOSIF_L2B_2019-2021_sifd_mean_clearsky_no_hot"
+out_name    <- "Amazon_TROPOSIF_L2B_2019-2021_sifd_mean_no_hot"
 out_dir     <- "G:/SIF_comps/csv/tropomi/"
 years       <- c(2019:2021)
 time        <- "month"
 variable    <- "SIF_Corr_743"
-filters     <- c("LC_PERC_2020", "cloud_fraction_L2", "phase_angle")
-threshs     <- c(90, 0, 20)
-direct      <- c("gt", "eq", "gt")
+filters     <- c("LC_PERC_2020", "phase_angle")
+threshs     <- c(90, 20)
+direct      <- c("gt", "gt")
 annual      <- TRUE # Compresses output to singular annual values; ie monthly means over many years
 
 file_df <- function(input_files, year, time) {
