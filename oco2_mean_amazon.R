@@ -6,15 +6,15 @@ library(ncdf4)
 # qc: Quality Flag: 0 = best (passes quality control + cloud fraction = 0.0); 1 = good (passes quality control); 2 = bad (failed quality control); -1 = not investigated
 # Mode: Instrument Measurement Mode, 0=Nadir, 1=Glint, 2=Target, 3=AreaMap, 4=Transition;
 
-input_files <- list.files("G:/OCO2/extracted/amazon", pattern = "*.nc", full.names = TRUE, recursive = TRUE)
-out_name    <- "Amazon_OCO2_L2B10_2015-2021_sifd_771_mean_qc_nadir"
+input_files <- list.files("G:/OCO2/B10/extracted/amazon", pattern = "*.nc", full.names = TRUE, recursive = TRUE)
+out_name    <- "Amazon_OCO2_L2B10_2015-2022_sifd_740_mean_qc_cs_nadir"
 out_dir     <- "G:/SIF_comps/csv/oco2/"
 years       <- c(2015:2021)
 time        <- "month"
-variable    <- "Daily_SIF_771nm"
-filters     <- c("LC_PERC_2020", "qc", "Mode")
-threshs     <- c(90, -1, 2, 0)
-direct      <- c("gt", "gt", "lt", "eq")
+variable    <- "Daily_SIF_740nm"
+filters     <- c("LC_PERC_2020", "qc", "qc", "cloud_flag_abp", "Mode")
+threshs     <- c(90, -1, 2, 0, 0)
+direct      <- c("gt", "gt", "lt", "eq", "eq")
 annual      <- TRUE # Compresses output to singular annual values; ie monthly means over many years
 
 file_df <- function(input_files, year, time) {

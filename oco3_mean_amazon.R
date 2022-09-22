@@ -5,15 +5,15 @@ library(ncdf4)
 # cloud_flag_abp:  Clouds: 0 - Classified clear, 1 - Classified cloudy, 2 - Not classified, all other values undefined; not used in SIF processing
 # qc: Quality Flag: 0 = best (passes quality control + cloud fraction = 0.0); 1 = good (passes quality control); 2 = bad (failed quality control); -1 = not investigated
 
-input_files <- list.files("G:/OCO3/extracted/amazon", pattern = "*.nc", full.names = TRUE, recursive = TRUE)
-out_name    <- "Amazon_OCO3_L2B10_2019-2022_sifd_mean_qc_ng"
+input_files <- list.files("G:/OCO3/B10/extracted/amazon", pattern = "*.nc", full.names = TRUE, recursive = TRUE)
+out_name    <- "Amazon_OCO3_L2B10_2019-2022_sifd_740_mean_qc_cs_nadir"
 out_dir     <- "G:/SIF_comps/csv/oco3/"
 years       <- c(2019:2022)
 time        <- "month"
-variable    <- "Daily_SIF_757nm"
-filters     <- c("LC_PERC_2020", "qc", "qc", "Mode")
-threshs     <- c(90, -1, 2, 2)
-direct      <- c("gt", "gt", "lt", "lt")
+variable    <- "Daily_SIF_740nm"
+filters     <- c("LC_PERC_2020", "qc", "qc", "cloud_flag_abp", "Mode")
+threshs     <- c(90, -1, 2, 0, 0)
+direct      <- c("gt", "gt", "lt", "eq", "eq")
 annual      <- TRUE # Compresses output to singular annual values; ie monthly means over many years
 
 file_df <- function(input_files, year, time) {
