@@ -3,7 +3,7 @@ library(ncdf4)
 
 input_dirs <- list.dirs("G:/TROPOMI/esa/extracted/Africa/ecoregions/masked", full.names = TRUE, recursive = FALSE)
 out_tag    <- "_2019-2021_sifd"
-out_dir    <- "G:/Africa/csv/ecoregions/mask_Dans/"
+out_dir    <- "G:/Africa/csv/ecoregions/mask_Dans/TROPOMI/"
 years      <- c(2019:2021)
 time       <- "month"
 variable   <- "SIF_Corr_743"
@@ -201,7 +201,7 @@ for (i in 1:length(input_dirs)){
   }
   
   if (all(is.na(files)) == FALSE) {
-    out_name   <- basename(files[1])
+    out_name   <- basename(files[!is.na(files)][1])
     out_name   <- paste0(substr(out_name, 1, nchar(out_name)-14), out_tag, ".csv")
     write.csv(ts_out, paste0(out_dir, out_name), row.names = FALSE)
     message(paste0("Saved ", out_name))
