@@ -8,7 +8,7 @@ library(ncdf4)
 input_dirs  <- list.dirs("G:/OCO3/B10/extracted/africa", full.names = TRUE, recursive = FALSE)
 out_tag    <- "_2019-2021_sifd"
 out_dir     <- "G:/Africa/csv/ecoregions/mask_Dans/OCO3/"
-years       <- c(2019:2022)
+years       <- c(2019:2021)
 time        <- "month"
 variable    <- "Daily_SIF_740nm"
 filters     <- c("qc", "qc", "cloud_flag_abp", "Mode")
